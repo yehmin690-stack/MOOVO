@@ -1,40 +1,117 @@
-name: Test Collect Douliu Realtime
+name: Collect Douliu Realtime
 
 on:
+  # 保留手動測試功能
   workflow_dispatch:
 
+  # 正式自動排程
+  schedule:
+
+    # 台灣時間 06:00 ~ 21:45
+    # 每 15 分鐘一次
+    - cron: "0,15,30,45 6-21 * * *"
+      timezone: "Asia/Taipei"
+
+    # 最後再抓 22:00
+    - cron: "0 22 * * *"
+      timezone: "Asia/Taipei"
+
+
+# 允許 GitHub Actions
+# 把新抓到的 CSV commit 回 repository
 permissions:
-  contents: read
+  contents: write
+
+
+# 避免前一次還沒完成，
+# 下一次又同時啟動造成 git push 衝突
+concurrency:
+  group: douliu-realtime-collector
+  cancel-in-progress: false
+
 
 jobs:
+
   collect:
+
     runs-on: ubuntu-latest
 
+    # 正常應該不到1分鐘
+    # 超過5分鐘直接停止，避免異常卡住
+    timeout-minutes: 5
+
+
     steps:
+
+      # ----------------------------------------
+      # 1. 下載 repository
+      # ----------------------------------------
+
       - name: Checkout repository
         uses: actions/checkout@v7
+
+
+      # ----------------------------------------
+      # 2. 安裝 Python
+      # ----------------------------------------
 
       - name: Set up Python
         uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
+
+      # ----------------------------------------
+      # 3. 安裝套件
+      # ----------------------------------------
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+
+      # ----------------------------------------
+      # 4. 執行斗六即時資料抓取
+      # ----------------------------------------
+
       - name: Collect Douliu realtime data
         env:
           TDX_CLIENT_ID: ${{ secrets.TDX_CLIENT_ID }}
           TDX_CLIENT_SECRET: ${{ secrets.TDX_CLIENT_SECRET }}
+
         run: |
           python collector.py
 
-      - name: Upload CSV
-        uses: actions/upload-artifact@v7
-        with:
-          name: douliu-realtime-test-${{ github.run_id }}
-          path: output/*.csv
-          if-no-files-found: error
-          retention-days: 7
+
+      # ----------------------------------------
+      # 5. 檢查今天是否真的產生 CSV
+      # ----------------------------------------
+
+      - name: Check collected CSV
+        run: |
+          echo "Latest collected files:"
+          find data/raw -type f -name "*.csv" | tail -10
+
+
+      # ----------------------------------------
+      # 6. 把資料永久存回 GitHub
+      # ----------------------------------------
+
+      - name: Save data to repository
+        run: |
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add data/raw
+
+          # 如果沒有新資料，就不要建立空 commit
+          if git diff --cached --quiet; then
+            echo "No new CSV generated."
+            exit 0
+          fi
+
+          git commit -m "data: Douliu realtime $(TZ=Asia/Taipei date '+%Y-%m-%d %H:%M:%S')"
+
+          git push

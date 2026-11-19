@@ -573,15 +573,34 @@ print(
 
 
 # ============================================================
-# 輸出 CSV
+# 正式資料儲存位置
+# data/raw/YYYY/MM/DD/
+# 每一次抓取建立一個獨立快照 CSV
 # ============================================================
+
+year = now_taipei.strftime("%Y")
+month = now_taipei.strftime("%m")
+day = now_taipei.strftime("%d")
+
+output_dir = os.path.join(
+    "data",
+    "raw",
+    year,
+    month,
+    day
+)
+
+os.makedirs(
+    output_dir,
+    exist_ok=True
+)
 
 timestamp = now_taipei.strftime(
     "%Y%m%d_%H%M%S"
 )
 
-output_file = (
-    f"{OUTPUT_DIR}/"
+output_file = os.path.join(
+    output_dir,
     f"douliu_realtime_{timestamp}.csv"
 )
 
@@ -591,5 +610,7 @@ df.to_csv(
     encoding="utf-8-sig"
 )
 
-print("\nCSV 已輸出：")
+print("\n==============================")
+print("正式資料已儲存")
+print("==============================")
 print(output_file)

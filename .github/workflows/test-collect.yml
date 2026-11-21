@@ -1,16 +1,9 @@
 
 
+name: Collect Douliu Realtime
+
 on:
   workflow_dispatch:
-
-  schedule:
-    - cron: "2,17,32,47 6-21 * * *"
-      timezone: "Asia/Taipei"
-
-    - cron: "2 22 * * *"
-      timezone: "Asia/Taipei"
-# 允許 GitHub Actions
-# 把新抓到的 CSV commit 回 repository
 permissions:
   contents: write
 

@@ -1,0 +1,20 @@
+name: Schedule Smoke Test
+
+on:
+  workflow_dispatch:
+
+  schedule:
+    - cron: "*/5 * * * *"
+      timezone: "Asia/Taipei"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Show trigger
+        run: |
+          echo "Event: ${{ github.event_name }}"
+          echo "Cron: ${{ github.event.schedule }}"
+          echo "Taipei time:"
+          TZ=Asia/Taipei date '+%Y-%m-%d %H:%M:%S'

@@ -1,12 +1,12 @@
-name: Schedule Smoke Test
-
 on:
   workflow_dispatch:
 
   schedule:
-    - cron: "*/5 * * * *"
+    - cron: "2,17,32,47 6-21 * * *"
       timezone: "Asia/Taipei"
 
+    - cron: "2 22 * * *"
+      timezone: "Asia/Taipei"
 jobs:
   test:
     runs-on: ubuntu-latest

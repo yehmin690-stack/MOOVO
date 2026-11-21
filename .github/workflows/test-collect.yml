@@ -1,21 +1,16 @@
 name: Collect Douliu Realtime
 
 on:
-  # 保留手動測試功能
   workflow_dispatch:
 
-  # 正式自動排程
   schedule:
-
-    # 台灣時間 06:00 ~ 21:45
-    # 每 15 分鐘一次
-    - cron: "0,15,30,45 6-21 * * *"
+    # 台灣時間 06:02～21:47，每15分鐘
+    - cron: "2,17,32,47 6-21 * * *"
       timezone: "Asia/Taipei"
 
-    # 最後再抓 22:00
-    - cron: "0 22 * * *"
+    # 每天最後一次 22:02
+    - cron: "2 22 * * *"
       timezone: "Asia/Taipei"
-
 
 # 允許 GitHub Actions
 # 把新抓到的 CSV commit 回 repository
@@ -49,6 +44,12 @@ jobs:
 
       - name: Checkout repository
         uses: actions/checkout@v7
+      - name: Show schedule information
+        run: |
+          echo "Trigger event: ${{ github.event_name }}"
+          echo "Scheduled cron: ${{ github.event.schedule }}"
+          echo "Actual Taipei time:"
+          TZ=Asia/Taipei date '+%Y-%m-%d %H:%M:%S'
 
 
       # ----------------------------------------
